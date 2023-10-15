@@ -1,31 +1,119 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.4.33213.308
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Snake2", "Snake2\Snake2.vcxproj", "{95FCE466-6B8A-4510-BC61-49E688CF8168}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Debug|x64.ActiveCfg = Debug|x64
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Debug|x64.Build.0 = Debug|x64
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Debug|x86.ActiveCfg = Debug|Win32
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Debug|x86.Build.0 = Debug|Win32
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Release|x64.ActiveCfg = Release|x64
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Release|x64.Build.0 = Release|x64
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Release|x86.ActiveCfg = Release|Win32
-		{95FCE466-6B8A-4510-BC61-49E688CF8168}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {7158B321-04D0-4BD7-8719-74548C85EBF7}
-	EndGlobalSection
-EndGlobal
+﻿#include <iostream>
+#include <Windows.h>
+
+// Function to set the cursor position to (x, y) on the console screen
+// Функция для установки курсора в позицию (x, y) на консольном экране
+using namespace std;
+
+void gotoxy(int x, int y) {
+	COORD pos = { x,y };
+	HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(output, pos);
+}
+const int WIDTH = 20;
+const int HEIGHT = 10;
+const int MAX_LEN_SNAKE = (WIDTH - 3) * (HEIGHT - 2);
+const int	UP = 0;
+const int DOWN = 1;
+const int LEFT = 2;
+const int RIGHT = 3;
+int SNAKE_DIR = UP;
+bool ISrunning = true;
+char map[] =
+"####################\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"#                  #\n"
+"####################\n";
+int SNAKE_X[MAX_LEN_SNAKE] = { 0 };
+int SNAKE_Y[MAX_LEN_SNAKE] = { 0 };
+int SNAKE_LEN = 1;
+char snake = '0';
+int food_x = 1 + (rand() % (WIDTH - 3));
+int food_y = 1 + (rand() % (HEIGHT - 2));
+char food = '*';
+int main()
+{
+	// Initial snake position in the center of the field
+	// Начальное положение змейки в центре поля
+	SNAKE_X[0] = WIDTH / 2;
+	SNAKE_Y[0] = HEIGHT / 2;
+	double time = clock();
+	while (ISrunning) {
+		// Handling key presses to change the snake's direction
+		// Обработка нажатий клавиш для изменения направления движения змейки
+		if (GetKeyState('W') & 0x8000) {
+			SNAKE_DIR = UP;
+		}
+		if (GetKeyState('A') & 0x8000) {
+			SNAKE_DIR = LEFT;
+		}
+		if (GetKeyState('S') & 0x8000) {
+			SNAKE_DIR = DOWN;
+		}
+		if (GetKeyState('D') & 0x8000) {
+			SNAKE_DIR = RIGHT;
+		}
+		// Updating the game state every 0.3 seconds\
+		// Обновление игрового состояния каждые 0.3 секунды
+		if ((clock() - time) / CLOCKS_PER_SEC >= 0.3) {
+			time = clock();
+			if (SNAKE_X[0] == food_x && SNAKE_Y[0] == food_y) {
+				// The snake reached the food, increase its length and move the food
+				// Змейка достигла еды, увеличиваем ее длину и перемещаем еду
+				++SNAKE_LEN;
+				food_x = 1 + (rand() % (WIDTH - 3));
+				food_y = 1 + (rand() % (HEIGHT - 2));
+
+			}
+			// Updating the snake's position
+			// Обновление положения змейки
+			for (int i = SNAKE_LEN - 2; i >= 0; --i) {
+				SNAKE_X[i + 1] = SNAKE_X[i];
+				SNAKE_Y[i + 1] = SNAKE_Y[i];
+			}
+			if (SNAKE_DIR == UP) {
+				--SNAKE_Y[0];
+			}
+			if (SNAKE_DIR == DOWN) {
+				++SNAKE_Y[0];
+			}
+			if (SNAKE_DIR == RIGHT) {
+				++SNAKE_X[0];
+			}
+			if (SNAKE_DIR == LEFT) {
+				--SNAKE_X[0];
+			}
+			// Displaying information about the current snake length and the game map
+			// Проверка на столкновение с границами карты
+			if (SNAKE_X[0] <= 0 || SNAKE_Y[0] <= 0 || SNAKE_X[0] >= WIDTH - 2 || SNAKE_Y[0] >= HEIGHT - 1) {
+				ISrunning = false;
+			}
+			gotoxy(0, 0);
+			// Вывод информации о текущей длине змейки и отображение карты игры
+			  cout << "lenght:" << SNAKE_LEN << endl;
+			  map[food_y * WIDTH + food_x] = food;
+			for (int i = 0; i < SNAKE_LEN; i++) {
+				map[SNAKE_Y[i] * WIDTH + SNAKE_X[i]] = snake;
+			}
+			  cout << map;
+			  // Clearing the snake's trail for the next update
+			  // Вывод информации о текущей длине змейки и отображение карты игры
+			for (int i = 0; i < SNAKE_LEN; i++) {
+				map[SNAKE_Y[i] * WIDTH + SNAKE_X[i]] = ' ';
+			}
+		}
+	
+}
+	
+	gotoxy(1, HEIGHT / 2);
+	 cout << "YOU SCORE IS" << SNAKE_LEN;
+	gotoxy(WIDTH, HEIGHT);
+}
+
+
